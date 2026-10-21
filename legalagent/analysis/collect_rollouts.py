@@ -28,8 +28,8 @@ about to be updated. Nothing from the gold labels enters the prompt.
 
 不要拿 dev/test 的错题来训练或重采样；`--split` 只接受 `train`。
 
-成本：G 条 × N 题 × (最多 max_rounds 轮) 次生成。8 GB 单卡、Qwen3-0.6B 下
-单题单条约 20–30 秒，所以 35 题 × G=4 大约 45–70 分钟。先用 `--limit 3` 试通。
+成本：G 条 × N 题 × (最多 max_rounds 轮) 次生成。16 GB 单卡、Qwen3-1.7B 下
+单题单条约 40–60 秒，所以 35 题 × G=4 大约 1.5–2.5 小时。先用 `--limit 3` 试通。
 """
 
 from __future__ import annotations
@@ -74,7 +74,7 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--groups", type=int, default=4,
                         help="每题采样条数 G，至少 2（组内要有奖励方差）")
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--adapter", default="", help="LoRA adapter 目录；留空用基座模型")
     parser.add_argument("--download", action="store_true",
                         help="允许联网下载模型（离线环境下不要加）")

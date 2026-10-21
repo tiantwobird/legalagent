@@ -52,7 +52,7 @@ def spans(mask: list[int]) -> list[tuple[int, int, int]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--limit", type=int, default=2)
     parser.add_argument("--max-completion-length", type=int, default=1024)
     parser.add_argument("--download", action="store_true",

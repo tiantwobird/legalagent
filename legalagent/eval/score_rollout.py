@@ -46,7 +46,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--split", default="dev", choices=["train", "dev", "test"])
     parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--download", action="store_true")
     parser.add_argument("--few-shot", action="store_true")

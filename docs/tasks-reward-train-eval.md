@@ -107,7 +107,7 @@ python -m unittest discover -s tests -t . -p "test_reward.py"  # 15 条单测
 1. **工具返回必须精简**：完整 payload 会被 TRL 判定超预算并整体回滚，
    模型看不到结果、reward 只看到悬空的 tool_call；精简版只回 ID + 条号 + 80 字摘要；
 2. **工具结果用 JSON 字符串返回**：TRL 用 Python `repr` 序列化 dict（单引号），不是合法 JSON；
-3. **必须 `enable_thinking=False`**：否则 0.6B 把预算全花在思考上，答案为空；
+3. **必须 `enable_thinking=False`**：否则 1.7B 把预算全花在思考上，答案为空；
 4. **reward 从 TRL 的消息轨迹里取**：tool 消息 → article_id，最后一条 assistant → 答案。
 
 

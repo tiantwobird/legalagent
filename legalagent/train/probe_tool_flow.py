@@ -62,7 +62,7 @@ def get_compact(article_id: str, applicable_date: str) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--download", action="store_true",
                         help="允许联网下载模型（离线环境下不要加）")
     args = parser.parse_args()

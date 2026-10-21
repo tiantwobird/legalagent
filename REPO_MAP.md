@@ -5,15 +5,15 @@
 
 ## 一、目录
 
-| 路径 | 角色 | 入库 |
+| 路径 | 角色 |  |
 | --- | --- | --- |
-| `legalagent/` | 全部可导入代码（六层包） | ✅ |
-| `tests/` | 37 条单测 + fixtures | ✅ |
-| `data/` | 语料、任务集（SQLite 由 `build_db` 生成） | ✅ 语料 / ⛔️ SQLite |
-| `runs/` | 训练输出目录 | ⛔️ 仅 `README.md` |
-| `results/` | 评测输出目录 | ⛔️ 仅 `README.md` |
-| `docs/` | 设计文档 | ✅ |
-| `scripts/` | Windows 一键脚本（UTF-8 BOM） | ✅ |
+| `legalagent/` | 全部可导入代码（六层包） |  |
+| `tests/` | 37 条单测 + fixtures |  |
+| `data/` | 语料、任务集（SQLite 由 `build_db` 生成） |  |
+| `runs/` | 训练输出目录 |  |
+| `results/` | 评测输出目录 |  |
+| `docs/` | 设计文档 |  |
+| `scripts/` | Windows 一键脚本（UTF-8 BOM） |  |
 | `chinalaw-cli/` | 上游法规库 CLI，**不内置** | ⛔️ 自行 clone |
 
 ## 二、分层清单
@@ -80,13 +80,13 @@
 
 ## 三、产物与输出约定
 
-| 位置 | 内容 | 入库 |
+| 位置 | 内容 |  |
 | --- | --- | --- |
-| `data/labor_subset.jsonl` | 351 条法条语料（含哈希与来源 URL） | ✅ |
-| `data/tasks/*.jsonl` | 50 题任务集，含 prompts-only 版本 | ✅ |
-| `data/legal_statutes.sqlite3` | 只读快照，`build_db` 生成 | ⛔️ |
-| `runs/<name>/` | adapter、`trainer_state.json`、`config.json`、`reward_stats.json` | ⛔️ 默认不发布 |
-| `results/` | 评测 / 分析 / 采集输出 | ⛔️ 默认不发布 |
+| `data/labor_subset.jsonl` | 351 条法条语料（含哈希与来源 URL） |  |
+| `data/tasks/*.jsonl` | 50 题任务集，含 prompts-only 版本 |  |
+| `data/legal_statutes.sqlite3` | 只读快照，`build_db` 生成 |  |
+| `runs/<name>/` | adapter、`trainer_state.json`、`config.json`、`reward_stats.json` |  |
+| `results/` | 评测 / 分析 / 采集输出 |  |
 
 `.gitignore` 忽略全部 `*.safetensors` / `*.pt` / `*.pth` / `*.bin`，
 所以仓库不会意外变大；要发布自己的 adapter 用 `git add -f`。
@@ -96,14 +96,4 @@
 - Python ≥ 3.10；核心层零第三方依赖
 - 训练：`pip install -e ".[train]"`，或按 `requirements.txt` 装匹配 CUDA 的 torch
 - 默认离线，只有加 `--download` 或设 `LEGALAGENT_ALLOW_DOWNLOAD=1` 才会联网
-- `scripts/*.ps1` 保存为 UTF-8 with BOM：Windows PowerShell 5.1 会把无 BOM 的 UTF-8
-  当成本地 ANSI，中文注释会直接导致语法错误
 
-## 五、已知缺口
-
-1. 训练收益未经证实（30 步不足以下结论），仓库不做效果声明；
-2. 任务标签未经独立法律专家复核；
-3. 测试集只有 5 题；
-4. 课程采样的对照实验（均匀 vs 课程）尚未编排；
-5. 无 vLLM，多轮训练慢；
-6. `build_tasks.py` 是模块级脚本（import 即执行），不是纯库函数。

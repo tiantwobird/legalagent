@@ -284,7 +284,7 @@ def run(query: str, applicable_date: str, args) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--query", default="员工严重违反公司规章制度被辞退，公司需要支付赔偿金吗？")
     parser.add_argument("--date", default="2024-01-01", help="applicable_date，必须由题目给出")
     parser.add_argument("--device", default="cuda", choices=["cuda", "cpu"])

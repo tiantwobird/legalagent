@@ -9,7 +9,7 @@ run a fixed query set through the same loop as `rollout_demo.py`, and score
 
 The `expect` field is for reporting only; it is never put into the prompt.
 
-    python -m legalagent.tools.baseline_toolcalling --model Qwen/Qwen3-0.6B --few-shot
+    python -m legalagent.tools.baseline_toolcalling --model Qwen/Qwen3-1.7B --few-shot
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ def one_round(model, tokenizer, messages, args) -> tuple[str, list[dict]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--download", action="store_true")
     parser.add_argument("--few-shot", action="store_true")

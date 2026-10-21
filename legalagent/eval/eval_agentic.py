@@ -103,7 +103,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--split", default="dev", choices=["train", "dev", "test"])
     parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--adapter", default="")
     parser.add_argument("--download", action="store_true",
                         help="允许联网下载模型（离线环境下不要加）")

@@ -1,19 +1,17 @@
 # LegalAgent
 
+# 数据集与研究代码仅供研究与教学使用；不构成法律意见，不得用于替代执业律师。
+
 面向中国劳动法的**版本感知**检索 Agent，用 GRPO 训练。
 
 模型不允许凭记忆作答：它只能通过两个确定性工具查条文，奖励函数逐条核对
 「引用是否真的来自工具返回」「条文是否与 gold 一致」「要点是否覆盖」。
 仓库从法条导出、任务构建、奖励、训练、评测一路可跑，37 条单测不需要 GPU。
 
-> **状态：v0.1，链路已验证，收益未验证。**
-> 单轮与多轮 GRPO 都能在 8 GB 卡上跑通，但 30 步不足以产生可观测收益。
-> 本仓库不发布作者的训练产物与评测数字——`runs/` 与 `results/` 里只有目录说明。
-> 研究 / 教学用途，输出不构成法律意见。
 
 ## 快速开始
 
-前置：Python ≥ 3.10。跑训练需要一块 CUDA 显卡（0.6B + LoRA 在 8 GB 上可运行）。
+前置：Python ≥ 3.10。跑训练需要一块 CUDA 显卡。
 
 ```bash
 git clone https://github.com/tiantwobird/legalagent.git
@@ -37,17 +35,11 @@ pip install -e ".[train]"          # 或按 requirements.txt 的说明单独装�
 python -m legalagent.train.train_grpo --max-steps 1 --limit 4 --download --out runs/smoke
 ```
 
-`--download` 允许联网拉 `Qwen/Qwen3-0.6B`（约 1.5 GB）。不加这个参数时一切都在离线模式，
+`--download` 允许联网拉 `Qwen/Qwen3-1.7B`。不加这个参数时一切都在离线模式，
 只读本地 Hugging Face 缓存 —— 这是为了避免训练脚本在后台偷偷下载模型。
 
-## 硬件与耗时（Qwen3-0.6B + LoRA r=16）
 
-| 项目 | 参考值 |
-| --- | --- |
-| 显存峰值 | 约 7.8 GB（单卡 8 GB 可跑） |
-| 单轮 GRPO，30 步 | 2–4 分钟 |
-| 多轮 agentic，30 步 | 15–20 分钟（每步要跑完整工具循环） |
-| 评测 dev 10 题 | 2–5 分钟 |
+
 
 更小的卡：把 `--num-generations 2` 和 `per_device_train_batch_size` 调小即可，
 但组内样本少于 2 时 GRPO 没有优势信号。
@@ -122,9 +114,8 @@ chinalaw 本地库
 Linux / macOS 没有 `.ps1` 的等价脚本，直接按上表逐条执行即可；`run_all.ps1` 的每个
 `Invoke-Step` 都会先打印等价的 `python -m ...` 命令。
 
-## 课程采样（可选）
 
-想法是：先用当前策略在 35 道 train 题上每题采 G 条，统计组内奖励方差、成功率和错误类别，
+先用当前策略在 35 道 train 题上每题采 G 条，统计组内奖励方差、成功率和错误类别，
 再决定下一段训练多练哪些题。
 
 ```text
@@ -143,9 +134,6 @@ python -m legalagent.analysis.bad_case_sampler \
 python -m legalagent.train.train_grpo_agentic --curriculum data/tasks/curriculum_train.jsonl --max-steps 10
 ```
 
-采集是额外一轮全量推理（35 题 × G 条），8 GB 卡上大约 45–70 分钟。
-给出的权重系数是启发式初值，**没有经过效果验证**，详见
-[`docs/bad-case-sampling.md`](docs/bad-case-sampling.md)。
 
 ## 常见问题
 
@@ -171,13 +159,7 @@ python -m legalagent.data.export_subset
 
 不重新导出也能完整跑训练：`data/labor_subset.jsonl` 已经在仓库里。
 
-## 已知限制
 
-1. **没有收益证据**：30 步的训练不足以下结论，仓库不做效果声明；
-2. **任务标签未经独立法律专家复核**（`review.independent_human_legal_expert_review` 全为 `pending`）；
-3. **测试集只有 5 题**，不足以支撑泛化结论；
-4. **课程采样只做了 MVP**：对照实验（均匀 vs 课程）尚未编排；
-5. **无 vLLM**：采样走 HF 原生 `generate`，是多轮训练慢的主因。
 
 ## 数据来源
 
@@ -185,14 +167,14 @@ python -m legalagent.data.export_subset
 每条记录带 `source_url`、`source_hash`、`source_checked_at` 与 `text_sha256`，
 可用 `manifest.json` 复核。本仓库**不包含任何模型权重**。
 
-数据集与研究代码仅供研究与教学使用；不构成法律意见，不得用于替代执业律师。
+
 
 ## 许可证
 
 代码与随仓库分发的数据集以 **MIT** 发布，全文见 [LICENSE](LICENSE)。
 
 - 法条正文来自公开政府法规库，属于官方文件；仓库保留 `source_url` 与 `text_sha256`，可逐条复核；
-- 模型权重不随仓库分发。使用 `Qwen/Qwen3-0.6B` 时请遵守其自身许可证；
+- 模型权重不随仓库分发。使用 `Qwen/Qwen3-1.7B` 时请遵守其自身许可证；
 - 上游 `chinalaw-cli` 不包含在本仓库内，按其自身许可证使用。
 
 如果你在研究中使用本项目，引用方式是仓库 URL + 版本号：

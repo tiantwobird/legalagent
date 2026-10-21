@@ -8,7 +8,7 @@ environment tokens; that is `train_grpo_agentic.py`, not this file.
     python -m legalagent.train.train_grpo --max-steps 1 --limit 4   # plumbing check
     python -m legalagent.train.train_grpo --max-steps 30            # real run
 
-Everything stays on one 8 GB GPU: Qwen3-0.6B in bf16 + LoRA r=16, 4 generations
+Everything stays on one 16 GB GPU: Qwen3-1.7B in bf16 + LoRA r=16, 4 generations
 per prompt, 192 completion tokens.
 """
 
@@ -56,7 +56,7 @@ def build_rows(tasks: list[dict], limit: int | None) -> list[dict]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--max-steps", type=int, default=30)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--num-generations", type=int, default=4)

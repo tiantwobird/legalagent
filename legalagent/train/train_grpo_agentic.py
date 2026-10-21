@@ -70,7 +70,7 @@ def parse_trace(conv) -> tuple[str, list[dict], list[str]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="Qwen/Qwen3-0.6B")
+    parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--max-steps", type=int, default=30)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--num-generations", type=int, default=2)
