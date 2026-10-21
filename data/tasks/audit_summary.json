@@ -1,0 +1,30 @@
+{
+  "total": 50,
+  "counts_by_type": {
+    "direct_retrieval": 15,
+    "fact_application": 20,
+    "multi_article": 10,
+    "insufficient_information": 5
+  },
+  "split_counts": {
+    "train": 35,
+    "dev": 10,
+    "test": 5
+  },
+  "law_coverage": {
+    "中华人民共和国劳动合同法": 60,
+    "中华人民共和国劳动争议调解仲裁法": 5,
+    "中华人民共和国劳动法": 5,
+    "中华人民共和国劳动合同法实施条例": 4,
+    "最高人民法院关于审理劳动争议案件适用法律问题的解释（一）": 4
+  },
+  "article_ids_used": 37,
+  "review_status": "assistant manual review and exact source quote checks; independent legal expert review PENDING",
+  "fixed_applicable_date": "2024-06-01",
+  "known_limitations": [
+    "2024-only snapshot evaluation; this is not a comprehensive historical law database",
+    "2025 labor dispute judicial interpretation (II) not included; avoid post-2025 questions",
+    "not validated by an independent licensed PRC lawyer",
+    "only 5 pilot test questions; do not claim generalization from them"
+  ]
+}
