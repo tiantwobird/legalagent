@@ -37,8 +37,7 @@ data/tasks/curriculum_*.jsonl
 
 # 本地缓存 / 临时 / 备份
 .tmp/
-.tmp-test/
-.tmp-verify/
+.tmp-*/
 .backup/
 .pytest_cache/
 .mypy_cache/

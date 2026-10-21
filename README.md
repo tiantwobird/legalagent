@@ -16,7 +16,7 @@
 前置：Python ≥ 3.10。跑训练需要一块 CUDA 显卡（0.6B + LoRA 在 8 GB 上可运行）。
 
 ```bash
-git clone <your-repo-url> legalagent
+git clone https://github.com/tiantwobird/legalagent.git
 cd legalagent
 
 python -m venv .venv
@@ -186,3 +186,22 @@ python -m legalagent.data.export_subset
 可用 `manifest.json` 复核。本仓库**不包含任何模型权重**。
 
 数据集与研究代码仅供研究与教学使用；不构成法律意见，不得用于替代执业律师。
+
+## 许可证
+
+代码与随仓库分发的数据集以 **MIT** 发布，全文见 [LICENSE](LICENSE)。
+
+- 法条正文来自公开政府法规库，属于官方文件；仓库保留 `source_url` 与 `text_sha256`，可逐条复核；
+- 模型权重不随仓库分发。使用 `Qwen/Qwen3-0.6B` 时请遵守其自身许可证；
+- 上游 `chinalaw-cli` 不包含在本仓库内，按其自身许可证使用。
+
+如果你在研究中使用本项目，引用方式是仓库 URL + 版本号：
+
+```bibtex
+@software{legalagent2026,
+  title  = {LegalAgent: version-aware labour-law retrieval agent trained with GRPO},
+  author = {tiantwobird},
+  year   = {2026},
+  url    = {https://github.com/tiantwobird/legalagent}
+}
+```
