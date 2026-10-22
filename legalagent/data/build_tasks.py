@@ -22,7 +22,8 @@ def A(law,n,anchor):
     return (law,n,anchor)
 C='labor_contract_law'; E='labor_contract_law_regulation'; L='labor_law'; D='labor_dispute_arbitration_law'; J='labor_dispute_interpretation_1'
 
-def add(kind,prompt,refs,points,issues,notes='',missing=None,difficulty='easy'):
+FIXED_SPLIT={}
+def add(kind,prompt,refs,points,issues,notes='',missing=None,difficulty='easy',fixed_split=None):
     i=len(TASKS)+1
     evidence=[]
     for law,n,anchor in refs:
@@ -38,8 +39,11 @@ def add(kind,prompt,refs,points,issues,notes='',missing=None,difficulty='easy'):
           'source_url':r['source_url'],'text_sha256':r['text_sha256'],
           'supporting_quote':anchor
         })
+    tid=f'LABOR_{i:03d}'
+    if fixed_split:
+        FIXED_SPLIT[tid]=fixed_split
     TASKS.append({
-      'task_id':f'LABOR_{i:03d}',
+      'task_id':tid,
       'task_type':kind, 'difficulty':difficulty,
       'jurisdiction':'CN', 'applicable_date':DATE,
       'prompt':prompt.strip()+' 请基于2024年6月1日适用的法律，先检索法规，再给出简洁的结论、必要条件和条文ID；如信息不足，请指出缺失事实，不得编造。',
@@ -110,26 +114,146 @@ add('insufficient_information','公司说员工“身体不适，工作不了”
 add('insufficient_information','员工称过去经常加班，公司不付加班费，要求你断定其劳动仲裁一定获胜；但没有具体加班时段、考勤或补休情况。应该如何回答？',[A(L,44,'休息日安排劳动者工作又不能安排补休'),A(J,42,'劳动者主张加班费的，应当就加班事实的存在承担举证责任')],['不能断言仲裁必胜；需区分工作日/休息日/法定节假日、补休情况、加班事实证据及公司掌握的相关证据。'],['加班费','证据不足'],missing=['具体加班时间','加班类别','休息日是否补休','考勤或工作安排证据'],difficulty='hard')
 add('insufficient_information','劳动者说“我发现权益受损已经一年多了，还能仲裁吗？”，但未说明争议类型、劳动关系是否存续、是否向公司主张过权利。能直接认定时效过期吗？',[A(D,27,'仲裁时效，因当事人一方向对方当事人主张权利')],['不能简单断言时效已过；一般时效一年，但应考虑知道/应知时间、时效中断、中止以及劳动关系存续期间拖欠劳动报酬的特别规则。'],['仲裁时效','中断中止','事实不足'],missing=['争议性质','知道或应当知道侵害时间','权利主张或救济记录','劳动关系是否存续'],difficulty='hard')
 
-assert len(TASKS)==50, len(TASKS)
-assert collections.Counter(t['task_type'] for t in TASKS)=={'direct_retrieval':15,'fact_application':20,'multi_article':10,'insufficient_information':5}
-assert len({t['prompt'] for t in TASKS})==50
-assert len({t['task_id'] for t in TASKS})==50
+# =====================================================================
+# 扩展 test 集（2026-10）：在原 5 题基础上补 25 题，使 frozen test = 30。
+# 全部为 free 法条（或与既有 gold 互补），引文逐字取自 data/labor_subset.jsonl。
+# 复核状态与原有 50 题一致：助理实质复核 + 程序化逐字比对；独立专家复核 pending。
+# =====================================================================
+
+# --- direct_retrieval +6 ---
+add('direct_retrieval','劳务派遣公司只和我签了一年合同。派遣单位与被派遣劳动者的合同期限，法律有什么要求？',
+ [A(C,58,'应当与被派遣劳动者订立二年以上的固定期限劳动合同')],
+ ['劳务派遣单位应当与被派遣劳动者订立二年以上的固定期限劳动合同','并按月支付劳动报酬'],
+ ['劳务派遣','合同期限'],difficulty='easy',fixed_split='test')
+add('direct_retrieval','我在餐厅做服务员，按小时计酬，平均每天4小时、每周20小时。这算全日制还是非全日制？非全日制是怎么定义的？',
+ [A(C,68,'平均每日工作时间不超过四小时')],
+ ['非全日制用工以小时计酬为主','一般平均每日工作时间不超过四小时，每周累计不超过二十四小时'],
+ ['非全日制','工时'],difficulty='easy',fixed_split='test')
+add('direct_retrieval','我做非全日制保洁，公司说工资两个月结一次。非全日制用工的工资结算周期有上限吗？',
+ [A(C,72,'劳动报酬结算支付周期最长不得超过十五日')],
+ ['非全日制小时计酬不得低于当地最低小时工资标准','劳动报酬结算支付周期最长不得超过十五日'],
+ ['非全日制','工资支付'],difficulty='easy',fixed_split='test')
+add('direct_retrieval','公司赶订单，要求我们每天加班，一个月累计超过60小时。法律对延长工作时间有上限吗？',
+ [A(L,41,'每月不得超过三十六小时')],
+ ['一般每日不得超过一小时','特殊原因需要延长的，每日不得超过三小时','每月不得超过三十六小时'],
+ ['加班','工时上限'],difficulty='easy',fixed_split='test')
+add('direct_retrieval','我试用期工资是转正工资的70%。试用期工资的法定下限是多少？',
+ [A(E,15,'不得低于本单位相同岗位最低档工资的80%')],
+ ['不得低于本单位相同岗位最低档工资的80%，或不得低于劳动合同约定工资的80%','并不得低于用人单位所在地的最低工资标准'],
+ ['试用期','工资'],difficulty='easy',fixed_split='test')
+add('direct_retrieval','公司裁员要给我经济补偿。计算月工资时，奖金、津贴、补贴算不算进去？',
+ [A(E,27,'按照劳动者应得工资计算')],
+ ['经济补偿的月工资按劳动者应得工资计算','包括计时或计件工资以及奖金、津贴和补贴等货币性收入','低于当地最低工资标准的按最低工资标准计算','工作不满12个月的按实际工作月数计算平均工资'],
+ ['经济补偿','计算基数'],difficulty='medium',fixed_split='test')
+
+# --- fact_application +10 ---
+add('fact_application','我在试用期第2个月被公司辞退，公司只说“不合适”，不肯说明具体理由。这样解除合法吗？公司要做什么？',
+ [A(C,21,'应当向劳动者说明理由')],
+ ['试用期内，除劳动者有第39条和第40条第一项、第二项规定的情形外，用人单位不得解除劳动合同','在试用期解除劳动合同的，应当向劳动者说明理由'],
+ ['试用期解除','说明理由'],difficulty='medium',fixed_split='test')
+add('fact_application','我在一家公司做派遣工已经两年，岗位是长期存在的主营业务岗位，公司一直用劳务派遣。这样合规吗？',
+ [A(C,66,'存续时间不超过六个月')],
+ ['劳务派遣只能用于临时性、辅助性或者替代性岗位','临时性岗位指存续时间不超过六个月的岗位','辅助性岗位是为主营业务岗位提供服务的非主营业务岗位'],
+ ['劳务派遣','三性岗位'],difficulty='medium',fixed_split='test')
+add('fact_application','公司要裁掉30人，占职工总数15%，直接发通知让下周走人。经济性裁员在程序上有什么要求？',
+ [A(C,41,'提前三十日向工会或者全体职工说明情况')],
+ ['裁减20人以上，或不足20人但占职工总数10%以上的，需提前三十日向工会或全体职工说明情况并听取意见','裁减方案应向劳动行政部门报告','应优先留用较长期限固定期限合同、无固定期限合同、家庭无其他就业人员等人员'],
+ ['经济性裁员','程序','优先留用'],difficulty='hard',fixed_split='test')
+add('fact_application','离职时公司一直不给我解除劳动合同的书面证明，导致新公司无法办理入职。公司要承担什么责任？',
+ [A(C,89,'由劳动行政部门责令改正')],
+ ['用人单位应在解除或终止劳动合同时出具书面证明','未出具的由劳动行政部门责令改正','给劳动者造成损害的，应当承担赔偿责任'],
+ ['解除证明','赔偿责任'],difficulty='medium',fixed_split='test')
+add('fact_application','公司拖欠我三个月工资，向劳动监察投诉后仍然逾期不付。除了补发工资，还能主张加付赔偿吗？',
+ [A(C,85,'百分之五十以上百分之一百以下')],
+ ['由劳动行政部门责令限期支付劳动报酬','逾期不支付的，责令按应付金额50%以上100%以下的标准加付赔偿金'],
+ ['欠薪','加付赔偿金'],difficulty='medium',fixed_split='test')
+add('fact_application','我没提前30天通知就离职，公司说项目因此延误，要我赔偿损失。法律上我需要负责吗？',
+ [A(C,90,'给用人单位造成损失的，应当承担赔偿责任')],
+ ['劳动者违反本法规定解除劳动合同，给用人单位造成损失的，应当承担赔偿责任','违反保密义务或竞业限制造成损失的，同样承担赔偿责任'],
+ ['违法解除','劳动者赔偿'],difficulty='medium',fixed_split='test')
+add('fact_application','我做非全日制小时工，公司说要先试用一个月、试用期工资打八折。这样约定有效吗？',
+ [A(C,70,'非全日制用工双方当事人不得约定试用期')],
+ ['非全日制用工双方当事人不得约定试用期'],
+ ['非全日制','试用期'],difficulty='easy',fixed_split='test')
+add('fact_application','我因病休了6个月医疗期，回公司后原岗位已有人，公司想解除合同。需要满足什么条件、履行什么程序？',
+ [A(L,26,'医疗期满后，不能从事原工作也不能从事由用人单位另行安排的工作')],
+ ['患病或非因工负伤，医疗期满后不能从事原工作，也不能从事用人单位另行安排的工作','用人单位可以解除，但应提前三十日以书面形式通知劳动者本人'],
+ ['医疗期','解除条件'],difficulty='hard',fixed_split='test')
+add('fact_application','我在小公司做前台，月薪1800元，当地最低工资2200元。公司说包吃住所以可以低一些，合法吗？',
+ [A(L,48,'用人单位支付劳动者的工资不得低于当地最低工资标准')],
+ ['国家实行最低工资保障制度','用人单位支付劳动者的工资不得低于当地最低工资标准','最低工资具体标准由省、自治区、直辖市人民政府规定'],
+ ['最低工资'],difficulty='easy',fixed_split='test')
+add('fact_application','我怀孕7个多月，公司仍安排我上夜班和加班。我可以拒绝吗？',
+ [A(L,61,'不得安排其延长工作时间和夜班劳动')],
+ ['不得安排孕期女职工从事第三级体力劳动强度和孕期禁忌从事的劳动','对怀孕七个月以上的女职工，不得安排延长工作时间和夜班劳动'],
+ ['女职工保护','孕期'],difficulty='easy',fixed_split='test')
+
+# --- multi_article +7 ---
+add('multi_article','公司把我们的派遣合同拆成好几份短期协议，岗位还是原来的长期岗位。这种“连续用工拆短期合同”的做法合规吗？派遣只能在什么岗位使用？',
+ [A(C,59,'不得将连续用工期限分割订立数个短期劳务派遣协议'),A(C,66,'只能在临时性、辅助性或者替代性的工作岗位上实施')],
+ ['派遣单位应与用工单位订立劳务派遣协议，约定岗位、人员数量、期限、报酬等','用工单位不得将连续用工期限分割订立数个短期劳务派遣协议','劳务派遣只能在临时性、辅助性或者替代性岗位上实施'],
+ ['劳务派遣','协议拆分','三性岗位'],difficulty='hard',fixed_split='test')
+add('multi_article','我签了竞业限制协议，离职后公司一直没给补偿。协议还有效吗？我可以主张多少补偿？',
+ [A(J,36,'按照劳动者在劳动合同解除或者终止前十二个月平均工资的30%按月支付经济补偿'),A(C,23,'在竞业限制期限内按月给予劳动者经济补偿')],
+ ['约定竞业限制但未约定经济补偿，劳动者履行了竞业限制义务，可要求按离职前十二个月平均工资的30%按月支付','该30%低于劳动合同履行地最低工资标准的，按最低工资标准支付','用人单位应按月给予经济补偿'],
+ ['竞业限制','经济补偿'],difficulty='hard',fixed_split='test')
+add('multi_article','仲裁裁决书下来后，公司说是终局裁决。我作为劳动者还能去法院起诉吗？期限多久？',
+ [A(D,47,'仲裁裁决为终局裁决'),A(D,48,'自收到仲裁裁决书之日起十五日内向人民法院提起诉讼')],
+ ['追索劳动报酬、工伤医疗费、经济补偿或赔偿金，不超过当地月最低工资标准十二个月金额的争议，以及执行国家劳动标准在工作时间、休息休假、社会保险等方面的争议，为终局裁决','劳动者对终局裁决不服的，可自收到裁决书之日起十五日内向人民法院提起诉讼'],
+ ['终局裁决','起诉期限'],difficulty='medium',fixed_split='test')
+add('multi_article','公司已经三个月不发工资，还说不许我离职。我可以马上走人并要求补偿吗？',
+ [A(L,32,'用人单位未按照劳动合同约定支付劳动报酬或者提供劳动条件'),A(C,38,'未及时足额支付劳动报酬的')],
+ ['用人单位未按劳动合同约定支付劳动报酬或提供劳动条件，劳动者可以随时通知解除劳动合同','未及时足额支付劳动报酬的，劳动者可以解除劳动合同'],
+ ['即时解除','欠薪'],difficulty='medium',fixed_split='test')
+add('multi_article','公司实行单休，每周只让我休一天，国庆还安排上班且不给补休。休息休假有哪些法定要求？',
+ [A(L,38,'用人单位应当保证劳动者每周至少休息一日'),A(L,40,'用人单位在下列节日期间应当依法安排劳动者休假')],
+ ['用人单位应当保证劳动者每周至少休息一日','元旦、春节、国际劳动节、国庆节等法定节日期间应当依法安排劳动者休假'],
+ ['休息休假','法定节假日'],difficulty='medium',fixed_split='test')
+add('multi_article','我怀孕7个月，孩子出生后还在哺乳期，公司一直安排夜班。孕期和哺乳期分别有什么保护？',
+ [A(L,61,'不得安排其延长工作时间和夜班劳动'),A(L,63,'不得安排女职工在哺乳未满一周岁的婴儿期间')],
+ ['怀孕七个月以上的女职工，不得安排延长工作时间和夜班劳动','哺乳未满一周岁婴儿期间，不得安排第三级体力劳动强度、哺乳期禁忌劳动，也不得安排延长工作时间和夜班劳动'],
+ ['女职工保护','孕期','哺乳期'],difficulty='medium',fixed_split='test')
+add('multi_article','公司一直没给我缴社保。我可以因此解除劳动合同吗？用人单位在社保上有什么法定义务？',
+ [A(L,72,'用人单位和劳动者必须依法参加社会保险，缴纳社会保险费'),A(C,38,'未依法为劳动者缴纳社会保险费的')],
+ ['用人单位和劳动者必须依法参加社会保险、缴纳社会保险费','未依法为劳动者缴纳社会保险费的，劳动者可以解除劳动合同'],
+ ['社会保险','被迫解除'],difficulty='medium',fixed_split='test')
+
+# --- insufficient_information +2 ---
+add('insufficient_information','公司拖欠我工资好几个月了，我能拿到多少赔偿？',
+ [A(C,85,'逾期不支付的，责令用人单位按应付金额'),A(L,50,'不得克扣或者无故拖欠劳动者的工资')],
+ ['不能直接给出赔偿金额；需先确认欠薪月数与金额','逾期仍不支付才涉及按应付金额50%以上100%以下加付赔偿金','工资不得克扣或无故拖欠'],
+ ['欠薪','赔偿金额'],missing=['拖欠的月数与具体金额','是否已向劳动行政部门投诉','是否已解除劳动合同'],difficulty='hard',fixed_split='test')
+add('insufficient_information','公司说效益不好要裁员，让我下周走人。我能拿多少补偿？',
+ [A(C,41,'生产经营发生严重困难'),A(E,27,'按照劳动者应得工资计算')],
+ ['不能直接给出补偿数额；需先确认是否属于经济性裁员的法定情形、是否履行法定程序','经济补偿按工作年限计算，月工资按应得工资（含奖金、津贴、补贴）计算'],
+ ['经济性裁员','经济补偿'],missing=['裁减人数与占职工总数的比例','是否履行提前三十日说明与报告程序','工作年限与解除前十二个月平均工资'],difficulty='hard',fixed_split='test')
+
+assert len(FIXED_SPLIT)==25, len(FIXED_SPLIT)
+
+assert len(TASKS)==75, len(TASKS)
+assert collections.Counter(t['task_type'] for t in TASKS)=={'direct_retrieval':21,'fact_application':30,'multi_article':17,'insufficient_information':7}
+assert len({t['prompt'] for t in TASKS})==75
+assert len({t['task_id'] for t in TASKS})==75
 # Distinct and non-overlapping split for an INTEGRATION/SMOKE SET ONLY, not a reliable scientific hold-out benchmark.
 split = {'train':[], 'dev':[], 'test':[]}
 for typ,seed,ntrain,ndev in [('direct_retrieval',101,10,3),('fact_application',102,14,4),('multi_article',103,7,2),('insufficient_information',104,4,1)]:
-    group=[t for t in TASKS if t['task_type']==typ]
+    group=[t for t in TASKS if t['task_type']==typ and t['task_id'] not in FIXED_SPLIT]
     rng=random.Random(seed);rng.shuffle(group)
     for i,t in enumerate(group):
         subset='train' if i<ntrain else ('dev' if i<ntrain+ndev else 'test')
         t['split']=subset
         split[subset].append(t)
-assert {k:len(v) for k,v in split.items()}=={'train':35,'dev':10,'test':5}
+for t in TASKS:
+    if t['task_id'] in FIXED_SPLIT:
+        t['split']=FIXED_SPLIT[t['task_id']]
+        split[t['split']].append(t)
+assert {k:len(v) for k,v in split.items()}=={'train':35,'dev':10,'test':30}, {k:len(v) for k,v in split.items()}
 
 def write_jsonl(path,rows):
     path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(''.join(json.dumps(obj,ensure_ascii=False)+'\n' for obj in rows),encoding='utf-8')
 
-write_jsonl(BASE/'tasks_all_50_reviewed.jsonl',TASKS)
+write_jsonl(BASE/'tasks_all_reviewed.jsonl',TASKS)
 for label,rs in split.items():
     write_jsonl(BASE/f'tasks_{label}_labeled.jsonl',rs)
     # Agent-visible dataset MUST NOT include labels/citations/evidence.
@@ -145,6 +269,6 @@ summary={'total':len(TASKS),'counts_by_type':dict(collections.Counter(t['task_ty
 'known_limitations':['2024-only snapshot evaluation; this is not a comprehensive historical law database',
 '2025 labor dispute judicial interpretation (II) not included; avoid post-2025 questions',
 'not validated by an independent licensed PRC lawyer',
-'only 5 pilot test questions; do not claim generalization from them']}
+'30-question frozen test set; still too small for strong generalization claims']}
 (BASE/'audit_summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8')
 print(json.dumps(summary,ensure_ascii=False,indent=2))

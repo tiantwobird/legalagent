@@ -24,7 +24,7 @@
 | --- | --- |
 | `export_subset.py` | 调上游 `chinalaw get` 导出 5 部法 / 351 条 → `data/labor_subset.jsonl` + `manifest.json`（可选步骤） |
 | `build_db.py` | 校验 JSONL（字段 / 日期 / 哈希 / 重复 / 版本区间）→ `data/legal_statutes.sqlite3`（原子替换） |
-| `build_tasks.py` | 生成 50 道任务（35 / 10 / 5）→ `data/tasks/` |
+| `build_tasks.py` | 生成 75 道任务（35 / 10 / 30）→ `data/tasks/` |
 | `validate_tasks.py` | 引用存在性、文本哈希、拆分隔离、gold 泄漏校验 |
 | `create_review_sheet.py` | 生成专家复核 CSV → `results/reviews/` |
 | `curriculum.py` | 把课程文件（prompt-only）与训练标签按 `task_id` 连接 |
@@ -83,7 +83,7 @@
 | 位置 | 内容 |  |
 | --- | --- | --- |
 | `data/labor_subset.jsonl` | 351 条法条语料（含哈希与来源 URL） |  |
-| `data/tasks/*.jsonl` | 50 题任务集，含 prompts-only 版本 |  |
+| `data/tasks/*.jsonl` | 75 题任务集，含 prompts-only 版本 |  |
 | `data/legal_statutes.sqlite3` | 只读快照，`build_db` 生成 |  |
 | `runs/<name>/` | adapter、`trainer_state.json`、`config.json`、`reward_stats.json` |  |
 | `results/` | 评测 / 分析 / 采集输出 |  |

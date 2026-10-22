@@ -31,7 +31,7 @@ FIELDS = [
 def main() -> None:
     rows = [
         json.loads(line)
-        for line in (TASKS / "tasks_all_50_reviewed.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in (TASKS / "tasks_all_reviewed.jsonl").read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
     out = RESULTS / "reviews" / "manual_expert_review_sheet.csv"
