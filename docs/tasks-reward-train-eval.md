@@ -1,4 +1,4 @@
-# 任务集与奖励设计（75 条源文校核任务）
+# 任务集与奖励设计（150 条源文校核任务）
 
 > **审核声明：** 本数据集是助手基于 `data/labor_subset.jsonl` 逐题设计并校对的，
 > 执行了自动法条 / 哈希 / 日期一致性检查，也做了部分官方公开法源抽查；
@@ -10,11 +10,11 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| `data/tasks/tasks_all_reviewed.jsonl` | 完整 75 条 *assistant-reviewed* 数据，含 gold labels / 引用证据 / 审查状态 |
-| `data/tasks/tasks_{train,dev,test}_labeled.jsonl` | 35/10/30 条含标签数据，**只供 reward 与评估器加载** |
+| `data/tasks/tasks_all_reviewed.jsonl` | 完整 150 条 *assistant-reviewed* 数据，含 gold labels / 引用证据 / 审查状态 |
+| `data/tasks/tasks_{train,dev,test}_labeled.jsonl` | 90/25/35 条含标签数据，**只供 reward 与评估器加载** |
 | `data/tasks/tasks_{train,dev,test}_prompts_only.jsonl` | 模型可见的任务，**不含 gold / 任务类型 / 难度** |
 | `data/tasks/audit_summary.json` | 数量、条文覆盖与已知限制 |
-| `legalagent/data/build_tasks.py` | 75 条任务的构造定义（可复现构建） |
+| `legalagent/data/build_tasks.py` | 150 条任务的构造定义（可复现构建） |
 | `legalagent/data/validate_tasks.py` | 引用段落、哈希、日期、拆分隔离、标签泄漏的自动校验 |
 | `legalagent/data/create_review_sheet.py` | 重新生成专家复核 CSV → `results/reviews/` |
 | `docs/review_protocol.md` | 独立法律专家的复核清单 |
@@ -94,7 +94,7 @@ python -m unittest discover -s tests -t . -p "test_reward.py"  # 15 条单测
 
 - `answer_points` 是字面重合度，改写幅度大时会低估；目前靠连续给分缓解，
   但**可能奖励关键词堆砌**，v2 应加长度 / 冗余惩罚或改用离线 LLM 判官校准；
-- `insufficiency` 只有 7 道题（test 里 2 道），权重小、方差大，别据此下结论；
+- `insufficiency` 只有 15 道题（test 里 2 道），权重小、方差大，别据此下结论；
 - 同一模型 + 同一 split + 同一配置才能横比，`score_*.json` 里已固化这些字段。
 
 

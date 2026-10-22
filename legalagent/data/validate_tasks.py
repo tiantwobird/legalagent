@@ -1,4 +1,4 @@
-"""Validation for the reviewed task set (75 tasks: 35 / 10 / 30); run after building tasks."""
+"""Validation for the reviewed task set (150 tasks: 90 / 25 / 35); run after building tasks."""
 import collections, hashlib, json, unittest
 
 from ..paths import DATA, TASKS
@@ -15,10 +15,10 @@ class DatasetValidation(unittest.TestCase):
         cls.task=read(BASE/'tasks_all_reviewed.jsonl')
         cls.idx={(x['law_id'],x['article_number']):x for x in cls.corpus}
     def test_record_count_types_unique(self):
-        self.assertEqual(len(self.task),75)
-        self.assertEqual(len({t['task_id'] for t in self.task}),75)
-        self.assertEqual(len({t['prompt'] for t in self.task}),75)
-        self.assertEqual(dict(collections.Counter(t['task_type'] for t in self.task)),{'direct_retrieval':21,'fact_application':30,'multi_article':17,'insufficient_information':7})
+        self.assertEqual(len(self.task),150)
+        self.assertEqual(len({t['task_id'] for t in self.task}),150)
+        self.assertEqual(len({t['prompt'] for t in self.task}),150)
+        self.assertEqual(dict(collections.Counter(t['task_type'] for t in self.task)),{'direct_retrieval':38,'fact_application':62,'multi_article':35,'insufficient_information':15})
     def test_all_sources_present_hash_correct(self):
         for t in self.task:
             with self.subTest(tid=t['task_id']):
@@ -41,7 +41,7 @@ class DatasetValidation(unittest.TestCase):
                 self.assertEqual(t['review']['independent_human_legal_expert_review'],'pending')
     def test_fixed_splits(self):
         ids=set()
-        for group,expected in [('train',35),('dev',10),('test',30)]:
+        for group,expected in [('train',90),('dev',25),('test',35)]:
             labeled=read(BASE/f'tasks_{group}_labeled.jsonl')
             prompts=read(BASE/f'tasks_{group}_prompts_only.jsonl')
             self.assertEqual(len(labeled),expected)
@@ -59,7 +59,7 @@ class DatasetValidation(unittest.TestCase):
         self.assertFalse({'labor_law:82','labor_law:36','labor_law:62'} & used)
     def test_insufficient_facts_explicit(self):
         cases=[t for t in self.task if t['task_type']=='insufficient_information']
-        self.assertEqual(len(cases),7)
+        self.assertEqual(len(cases),15)
         self.assertTrue(all(t['missing_facts'] for t in cases))
 
 if __name__=='__main__':

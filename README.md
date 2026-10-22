@@ -58,7 +58,7 @@ legalagent/                 包：全部可导入代码
 └── analysis/               失败分类、rollout 采集、课程采样
 
 tests/                      37 条单测（+ fixtures）
-data/                       labor_subset.jsonl、manifest、tasks/（75 题）
+data/                       labor_subset.jsonl、manifest、tasks/（150 题）
 runs/                       训练输出（仓库内为空）
 results/                    评测输出（仓库内为空）
 docs/                       设计文档
@@ -71,7 +71,7 @@ scripts/                    Windows 一键脚本
 chinalaw 本地库
    └─ export_subset ──► data/labor_subset.jsonl（351 条 / 5 部法）
                            └─ build_db ──► data/legal_statutes.sqlite3（只读、版本感知）
-                           └─ build_tasks ──► data/tasks/tasks_{train,dev,test}_*.jsonl（35/10/30）
+                           └─ build_tasks ──► data/tasks/tasks_{train,dev,test}_*.jsonl（90/25/35）
                                                 └─ validate_tasks（引用 / 哈希 / 拆分 / 泄漏）
 ```
 
