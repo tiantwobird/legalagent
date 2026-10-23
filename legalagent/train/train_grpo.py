@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 
 from ..data.curriculum import load_curriculum
-from ..model_io import load_model, load_tokenizer
+from ..model_io import check_adapter_dir, load_adapter_model, load_model, load_tokenizer
 from ..paths import RUNS, TASKS
 from ..reward import RewardConfig, score_rollout
 from ..tools.legal_tools import search_statute
@@ -54,7 +54,7 @@ def build_rows(tasks: list[dict], limit: int | None) -> list[dict]:
     return rows
 
 
-def main() -> int:
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="Qwen/Qwen3-1.7B")
     parser.add_argument("--max-steps", type=int, default=30)
@@ -65,8 +65,22 @@ def main() -> int:
     parser.add_argument("--out", default=str(RUNS / "grpo_single"))
     parser.add_argument("--curriculum", default="",
                         help="bad_case_sampler 产出的 prompt-only JSONL；给了就只训这些题（可重复）")
+    parser.add_argument("--adapter", default="",
+                        help="上一阶段的 LoRA adapter 目录；给了就从它续训，而不是从基座重建 LoRA")
     parser.add_argument("--download", action="store_true")
-    args = parser.parse_args()
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+
+    adapter_cfg = None
+    if args.adapter:
+        adapter_cfg = check_adapter_dir(args.adapter, args.model)
+        if Path(args.out).resolve() == Path(args.adapter).resolve():
+            raise SystemExit(
+                "--out 不能与 --adapter 相同：会原地覆盖上一阶段 adapter，训练记录无法回溯。"
+            )
 
     import torch
     from datasets import Dataset
@@ -95,6 +109,9 @@ def main() -> int:
     print(f"[data] {len(dataset)} prompts, avg chars {sum(map(len, prompts)) // len(prompts)}")
 
     model = load_model(args.model, download=args.download, dtype=torch.bfloat16)
+    if args.adapter:
+        model = load_adapter_model(model, args.adapter)
+        print(f"[adapter] 从 {args.adapter} 续训（底座 {adapter_cfg.get('base_model_name_or_path', args.model)}）")
 
     # tool_use is pre-executed in this variant, so its weight is zeroed out.
     cfg = RewardConfig(w_tool_use=0.0, w_grounding=0.15, w_gold=0.35, w_points=0.40)
@@ -114,10 +131,12 @@ def main() -> int:
             stats.append({"task_id": tid, "total": breakdown.total, **breakdown.components})
         return scores
 
-    lora = LoraConfig(
-        r=16, lora_alpha=32, lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-    )
+    lora = None
+    if not args.adapter:
+        lora = LoraConfig(
+            r=16, lora_alpha=32, lora_dropout=0.05, bias="none", task_type="CAUSAL_LM",
+            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        )
     grpo_args = GRPOConfig(
         output_dir=args.out,
         per_device_train_batch_size=2,
@@ -146,7 +165,15 @@ def main() -> int:
     except Exception:  # noqa: BLE001 - 记录配置失败不应该中断训练
         grpo_dict = {}
     (run_dir / "config.json").write_text(
-        json.dumps({"cli": vars(args), "grpo": grpo_dict}, ensure_ascii=False, indent=2, default=str),
+        json.dumps({
+            "cli": vars(args),
+            "grpo": grpo_dict,
+            "lineage": {
+                "base_model": args.model,
+                "continued_from": str(Path(args.adapter).resolve()) if args.adapter else None,
+                "adapter_base_model": (adapter_cfg or {}).get("base_model_name_or_path"),
+            },
+        }, ensure_ascii=False, indent=2, default=str),
         encoding="utf-8",
     )
 
@@ -159,6 +186,10 @@ def main() -> int:
         peft_config=lora,
     )
     trainer.train()
+    # `save_steps` only writes checkpoint-<n>/adapter_*; the run root must also
+    # be a loadable adapter, because the next curriculum round uses it as
+    # --adapter (and eval/collect point at runs/<name>).
+    trainer.save_model(args.out)
 
     n = len(stats)
     if n:

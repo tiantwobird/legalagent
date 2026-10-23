@@ -16,7 +16,7 @@ import json
 import sys
 from pathlib import Path
 
-from ..model_io import load_model, load_tokenizer
+from ..model_io import check_adapter_dir, load_adapter_model, load_model, load_tokenizer
 from ..paths import RESULTS, TASKS
 from ..reward import RewardConfig, score_rollout
 from ..tools.agent_tools import get_compact, search_compact
@@ -115,9 +115,8 @@ def main() -> int:
     tokenizer = load_tokenizer(args.model, download=args.download)
     model = load_model(args.model, download=args.download, dtype="auto").eval()
     if args.adapter:
-        from peft import PeftModel
-
-        model = PeftModel.from_pretrained(model, args.adapter)
+        check_adapter_dir(args.adapter, args.model)
+        model = load_adapter_model(model, args.adapter, trainable=False).eval()
         print(f"[adapter] {args.adapter}")
     model.to("cuda" if _cuda() else "cpu")
 

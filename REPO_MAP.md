@@ -51,8 +51,8 @@
 
 | 文件 | 作用 |
 | --- | --- |
-| `train_grpo.py` | 单轮 grounded GRPO（预注入候选，LoRA r=16） |
-| `train_grpo_agentic.py` | 多轮 agentic GRPO（模型自调工具，TRL `tools=`） |
+| `train_grpo.py` | 单轮 grounded GRPO（预注入候选，LoRA r=16；`--adapter` 续训） |
+| `train_grpo_agentic.py` | 多轮 agentic GRPO（模型自调工具，TRL `tools=`；`--adapter` 续训） |
 | `probe_tool_flow.py` | 探针：验证 reward 能否看到工具轨迹 |
 | `audit_tool_mask.py` | 审计 TRL 的 tool token mask（工具返回是否被正确排除出 loss） |
 

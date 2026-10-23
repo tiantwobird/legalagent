@@ -39,7 +39,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from ..model_io import load_model, load_tokenizer, resolve_device
+from ..model_io import check_adapter_dir, load_adapter_model, load_model, load_tokenizer, resolve_device
 from .bad_case_analyzer import classify
 from .bad_case_sampler import read_jsonl, save_jsonl
 from ..eval.eval_agentic import run_task
@@ -100,9 +100,8 @@ def main() -> int:
     tokenizer = load_tokenizer(args.model, download=args.download)
     model = load_model(args.model, download=args.download, dtype="auto").eval()
     if args.adapter:
-        from peft import PeftModel
-
-        model = PeftModel.from_pretrained(model, args.adapter)
+        check_adapter_dir(args.adapter, args.model)
+        model = load_adapter_model(model, args.adapter, trainable=False).eval()
         print(f"[adapter] {args.adapter}")
     model.to(resolve_device())
 

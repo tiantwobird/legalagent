@@ -77,7 +77,12 @@ python -m legalagent.analysis.bad_case_sampler \
 | --- | --- | --- |
 | 1 采集 | `python -m legalagent.analysis.collect_rollouts --adapter runs/grpo_agentic --groups 4` | `results/rollout_groups_<version>.jsonl` |
 | 2 采样 | `python -m legalagent.analysis.bad_case_sampler --labels ... --prompts ... --groups ...` | `data/tasks/curriculum_train.jsonl` |
-| 3 训练 | `python -m legalagent.train.train_grpo_agentic --curriculum data/tasks/curriculum_train.jsonl --max-steps 10` | `runs/<name>_curr/` |
+| 3 训练 | `python -m legalagent.train.train_grpo_agentic --curriculum data/tasks/curriculum_train.jsonl --adapter runs/<同一 policy_version> --max-steps 10` | `runs/<name>_curr/` |
+
+第 3 步的 `--adapter` 必须与第 1 步采集用的 adapter 相同（第一轮基座采集时省略）。
+训练脚本会把 `PeftModel` 交给 TRL 并传 `peft_config=None`：TRL 会冻结一份
+`ref` adapter 作 KL 参照，使本阶段的正则项对准「本阶段起点」，而不是基座模型。
+续训记录写在 `runs/<name>_curr/config.json` 的 `lineage` 字段里。
 
 ### 错误类别是怎么来的
 

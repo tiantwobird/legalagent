@@ -125,14 +125,19 @@ collect_rollouts ──► rollout_groups.jsonl ──► bad_case_sampler ─�
 ```
 
 ```bash
-python -m legalagent.analysis.collect_rollouts --groups 4 --download
+python -m legalagent.analysis.collect_rollouts --adapter runs/grpo_agentic --groups 4 --download
 python -m legalagent.analysis.bad_case_sampler \
   --labels data/tasks/tasks_train_labeled.jsonl \
   --prompts data/tasks/tasks_train_prompts_only.jsonl \
-  --groups results/rollout_groups_base.jsonl \
+  --groups results/rollout_groups_grpo_agentic.jsonl \
   --output data/tasks/curriculum_train.jsonl
-python -m legalagent.train.train_grpo_agentic --curriculum data/tasks/curriculum_train.jsonl --max-steps 10
+python -m legalagent.train.train_grpo_agentic --curriculum data/tasks/curriculum_train.jsonl \
+  --adapter runs/grpo_agentic --max-steps 10
 ```
+
+两处 `--adapter` 必须指向**同一个** adapter：课程权重是按它的行为算的，若训练从基座
+重新建 LoRA，策略就和课程对不上了。只有第一轮（还没有 adapter、基座采集）可以把
+两处 `--adapter` 都去掉（groups 文件相应变成 `rollout_groups_base.jsonl`）。
 
 
 ## 常见问题
